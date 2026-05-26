@@ -1,0 +1,1 @@
+availableServices=anilist%2Cmyanimelist%2Cbangumi%2Cshikimori

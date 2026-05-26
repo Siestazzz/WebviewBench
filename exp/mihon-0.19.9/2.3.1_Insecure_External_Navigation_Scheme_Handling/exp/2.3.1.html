@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 阅读同步服务</title>
+<style>
+body { font-family: sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.info { color: #666; font-size: 14px; }
+button { padding: 10px 14px; border: 0; border-radius: 6px; background: #2a6496; color: white; font-size: 15px; }
+pre { background: #eee; padding: 10px; border-radius: 4px; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+<h2>Mihon 阅读同步服务</h2>
+<p class="info">页面模拟漫画源帮助页中的阅读同步入口，会通过 intent:// 链接打开应用内账户明细。</p>
+
+<div class="card">
+<h3>同步状态</h3>
+<p id="status">正在准备打开阅读同步账户详情...</p>
+<button onclick="trigger()">重新打开账户详情</button>
+</div>
+
+<div class="card">
+<h3>触发链路</h3>
+<pre id="log"></pre>
+</div>
+
+<script>
+var targetClass = "eu.kanade.tachiyomi.ui.setting.track.TrackAccountStatementActivity";
+var packages = [
+    "app.mihon.debug",
+    "app.mihon.benchmark",
+    "app.mihon.dev",
+    "app.mihon"
+];
+
+function appendLog(text) {
+    var log = document.getElementById("log");
+    log.textContent += text + "\n";
+}
+
+function buildIntent(packageName) {
+    return "intent://reader/track-statement#Intent;" +
+        "scheme=mihon;" +
+        "action=android.intent.action.VIEW;" +
+        "component=" + packageName + "/" + targetClass + ";" +
+        "end";
+}
+
+function trigger() {
+    document.getElementById("status").textContent = "正在通过 intent:// 请求启动内部 TrackAccountStatementActivity...";
+    appendLog("页面位于 WebView 内，开始触发 intent:// 外部导航。");
+
+    packages.forEach(function(packageName, index) {
+        setTimeout(function() {
+            var intentUrl = buildIntent(packageName);
+            appendLog("try " + packageName + ": " + intentUrl);
+            location.href = intentUrl;
+        }, index * 900);
+    });
+}
+
+setTimeout(trigger, 800);
+</script>
+</body>
+</html>

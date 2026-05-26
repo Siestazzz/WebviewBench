@@ -1,0 +1,1 @@
+storageGroupTraversal_../../../../shared_prefs=%7B%22metadata%22%3A%7B%22mangaId%22%3A%221%22%2C%22chapterId%22%3A%221%22%2C%22format%22%3A%22json%22%2C%22quality%22%3A%22high%22%2C%22includeImages%22%3Afalse%2C%22storageGroup%22%3A%22..%5C%2F..%5C%2F..%5C%2F..%5C%2Fshared_prefs%22%2C%22exportedAt%22%3A1778987186743%7D%2C%22pages%22%3A%5B%7B%7D%5D%7D

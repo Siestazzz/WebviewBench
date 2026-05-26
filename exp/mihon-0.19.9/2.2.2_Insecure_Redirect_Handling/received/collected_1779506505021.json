@@ -1,0 +1,9 @@
+{
+  "href": "http://198.18.0.1:8000/exp/2.2.2",
+  "currentChapter": "Frieren: Beyond Journey's End - Chapter 129",
+  "readingProgress": "page=18,totalPages=24,percent=75",
+  "services": "anilist,myanimelist,bangumi,shikimori",
+  "anilistToken": "benchmark-anilist-reader-token",
+  "myanimelistAuthHeader": "Bearer benchmark-myanimelist-reader-token",
+  "sourceAuthHeader": "Bearer benchmark-mihon-source-session"
+}

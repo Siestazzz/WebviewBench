@@ -1,0 +1,6 @@
+{
+  "attackerBase": "http://198.18.0.1:8000",
+  "attackPage": "http://198.18.0.1:8000/exp/2.2.2",
+  "officialJumpUrl": "http://mihon.app:8080/help/jump?target=http%3A%2F%2F198.18.0.1%3A8000%2Fexp%2F2.2.2",
+  "deeplink": "mihon://help/webview?url=http%3A%2F%2Fmihon.app%3A8080%2Fhelp%2Fjump%3Ftarget%3Dhttp%253A%252F%252F198.18.0.1%253A8000%252Fexp%252F2.2.2"
+}

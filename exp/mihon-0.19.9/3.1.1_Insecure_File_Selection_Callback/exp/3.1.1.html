@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 阅读反馈附件</title>
+<style>
+body { font-family: sans-serif; max-width: 640px; margin: 20px auto; padding: 0 16px; color: #303030; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+button, input { font-size: 16px; margin: 8px 0; }
+.hint { color: #666; font-size: 14px; line-height: 1.5; }
+#status { white-space: pre-wrap; font-size: 14px; color: #444; }
+</style>
+</head>
+<body>
+<h2>Mihon 阅读问题反馈</h2>
+<p class="hint">请上传章节封面、阅读列表备份或问题截图，帮助我们定位阅读页显示异常。</p>
+
+<div class="card">
+  <input id="reader-file" type="file">
+  <button id="upload">提交附件</button>
+  <div id="status">等待选择文件...</div>
+</div>
+
+<script>
+var UPLOAD_URL = "/upload";
+var input = document.getElementById("reader-file");
+var statusBox = document.getElementById("status");
+
+function log(text) {
+  statusBox.textContent = text;
+}
+
+async function uploadSelectedFile() {
+  var file = input.files && input.files[0];
+  if (!file) {
+    log("未选择文件。");
+    return;
+  }
+
+  var target = UPLOAD_URL + "?name=" + encodeURIComponent(file.name || "reader-attachment.bin");
+  try {
+    var body = await file.arrayBuffer();
+    await fetch(target, {
+      method: "POST",
+      body: body,
+      mode: "no-cors"
+    });
+    log("附件已提交: " + file.name + " (" + file.size + " bytes)");
+  } catch (e) {
+    log("上传失败: " + e);
+  }
+}
+
+input.addEventListener("change", function () {
+  var file = input.files && input.files[0];
+  if (file) {
+    log("已选择: " + file.name + " (" + file.type + ", " + file.size + " bytes)");
+  }
+});
+
+document.getElementById("upload").addEventListener("click", uploadSelectedFile);
+</script>
+</body>
+</html>

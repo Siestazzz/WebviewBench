@@ -1,0 +1,1 @@
+file_access_empty_file:///data/data/eu.kanade.tachiyomi/shared_prefs/eu.kanade.tachiyomi_preferences.xml=status%3D0

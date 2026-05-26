@@ -1,0 +1,1 @@
+reader_cache_file=%7B%0A%20%20%22sourceAuthHeader%22%3A%20%22Bearer%20benchmark-source-auth-header%22%2C%0A%20%20%22sourceSessionCookie%22%3A%20%22mihon_session%3Dbenchmark-reader-session-cookie%22%2C%0A%20%20%22syncToken%22%3A%20%22benchmark-reader-sync-token%22%2C%0A%20%20%22libraryDeviceId%22%3A%20%22benchmark-device-private-id%22%0A%7D%0A

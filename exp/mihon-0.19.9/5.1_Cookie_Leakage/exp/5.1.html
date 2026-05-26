@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mihon Reader Help</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f8fb;
+      color: #20242a;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 18px;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0 0 12px;
+    }
+    section {
+      background: #ffffff;
+      border: 1px solid #d9e1ec;
+      border-radius: 8px;
+      padding: 18px;
+    }
+    code {
+      background: #eef3f8;
+      border-radius: 4px;
+      padding: 2px 5px;
+    }
+    .status {
+      margin-top: 14px;
+      font-weight: 700;
+      color: #126b3a;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>Mihon reader source help</h1>
+      <p>该页面模拟攻击者控制的漫画源帮助页。漏洞触发点发生在页面 HTML 被请求之前：WebView 初始 <code>loadUrl</code> 已经把源站认证 header 附加到了这个请求。</p>
+      <p>服务端会把本次请求的 <code>Authorization</code>、<code>Cookie</code> 和完整请求头写入 <code>received/header_leak_*.txt</code>。</p>
+      <div class="status">如果你能看到这个页面，请检查服务端 received 目录中的 header_leak 文件。</div>
+    </section>
+  </main>
+</body>
+</html>

